@@ -1,0 +1,26 @@
+#!/usr/bin/python2.7
+import ast
+from fixed_point import fixed,W
+import myhdl
+from myhdl import bin
+
+class FixedWrapper(ast.NodeTransformer):
+    def visit_Num(self, node):
+        if isinstance(node.n, float):
+            return ast.Call(func=ast.Name(id='Fixed', ctx=ast.Load()),
+                            args=[node], keywords=[])
+        return node
+
+class Fixed(object):
+    def __init__(self, value):
+        self.value = fixed(value, min=-4, max=4, res=.125)
+        print("value of x is ",self.value)
+
+code = "x=2.334"
+
+print("after AST transformation")
+ast_tree = ast.parse(code)
+ast_tree = FixedWrapper().visit(ast_tree)
+ast.fix_missing_locations(ast_tree)
+compiled = compile(ast_tree, "<ast>", "exec")
+exec(compiled)
